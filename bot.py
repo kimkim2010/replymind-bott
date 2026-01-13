@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext
 from openai import OpenAI
 
 # ================================
