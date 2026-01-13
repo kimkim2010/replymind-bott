@@ -8,7 +8,7 @@ from openai import OpenAI
 # 🔑 CONFIG
 # ================================
 
-TELEGRAM_BOT_TOKEN = ""
+TELEGRAM_BOT_TOKEN = "8508379444:AAGMIR-0HFU7E3iinnBkIIy5FdD7_k-qI1Y"
 OPENAI_API_KEY = ""
 
 client = OpenAI(api_key=OPENAI_API_KEY)
