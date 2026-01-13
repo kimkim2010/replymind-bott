@@ -1,14 +1,14 @@
 import os
 import sqlite3
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 from openai import OpenAI
 
 # ================================
 # 🔑 CONFIG
 # ================================
 
-TELEGRAM_BOT_TOKEN = "8508379444:AAGMIR-0HFU7E3iinnBkIIy5FdD7_k-qI1Y"
+TELEGRAM_BOT_TOKEN = ""
 OPENAI_API_KEY = ""
 
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -63,7 +63,7 @@ You are charming, confident, and convincing.
 When client wants to buy:
 Tell them to contact:
 📞 WhatsApp: +49 177 7952971
-📸 Instagram: replyrindai
+📸 Instagram: replymindai
 📧 Email: replymindai@gmail.com
 
 You remember the user name and business.
@@ -101,18 +101,22 @@ def get_user(user_id):
 def save_user(user_id, name=None, business=None):
     existing = get_user(user_id)
     if existing:
-        cursor.execute("UPDATE users SET name=?, business=? WHERE user_id=?",
-                       (name or existing[0], business or existing[1], user_id))
+        cursor.execute(
+            "UPDATE users SET name=?, business=? WHERE user_id=?",
+            (name or existing[0], business or existing[1], user_id)
+        )
     else:
-        cursor.execute("INSERT INTO users (user_id, name, business) VALUES (?, ?, ?)",
-                       (user_id, name, business))
+        cursor.execute(
+            "INSERT INTO users (user_id, name, business) VALUES (?, ?, ?)",
+            (user_id, name, business)
+        )
     conn.commit()
 
 # ================================
 # 🤖 AI FUNCTION
 # ================================
 
-async def ask_ai(user_id, message):
+def ask_ai(user_id, message):
     user = get_user(user_id)
 
     memory_text = ""
@@ -135,14 +139,14 @@ async def ask_ai(user_id, message):
 # 📲 TELEGRAM HANDLERS
 # ================================
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text(
         "🔥 Welcome to ReplyMindAI!\n\n"
         "I’m your smart AI front desk 😏✨\n\n"
         "Tell me your name and what business you run — I’ll remember you 🧠"
     )
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def handle_message(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     text = update.message.text
 
@@ -153,23 +157,25 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Detect business
     if "i sell" in text.lower() or "أبيع" in text:
-        business = text
-        save_user(user_id, business=business)
+        save_user(user_id, business=text)
 
-    reply = await ask_ai(user_id, text)
-    await update.message.reply_text(reply)
+    reply = ask_ai(user_id, text)
+    update.message.reply_text(reply)
 
 # ================================
 # 🚀 RUN
 # ================================
 
 def main():
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
+    dp = updater.dispatcher
+
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
 
     print("🔥 ReplyMind AI (Luxury Front Desk) is running...")
-    app.run_polling()
+    updater.start_polling()
+    updater.idle()
 
 if __name__ == "__main__":
     main()
