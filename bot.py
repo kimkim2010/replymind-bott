@@ -88,6 +88,15 @@ CREATE TABLE IF NOT EXISTS users (
 )
 """)
 conn.commit()
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS leads (
+    user_id INTEGER PRIMARY KEY,
+    interest TEXT,
+    objection TEXT,
+    status TEXT
+)
+""")
+conn.commit()
 
 # ================================
 # 🧠 MEMORY FUNCTIONS
@@ -110,6 +119,29 @@ def save_user(user_id, name=None, business=None):
             (user_id, name, business)
         )
     conn.commit()
+    def get_lead(user_id):
+    cursor.execute("SELECT interest, objection, status FROM leads WHERE user_id=?", (user_id,))
+    return cursor.fetchone()
+
+def save_lead(user_id, interest=None, objection=None, status=None):
+    existing = get_lead(user_id)
+
+    if existing:
+        cursor.execute(
+            "UPDATE leads SET interest=?, objection=?, status=? WHERE user_id=?",
+            (
+                interest or existing[0],
+                objection or existing[1],
+                status or existing[2],
+                user_id
+            )
+        )
+    else:
+        cursor.execute(
+            "INSERT INTO leads (user_id, interest, objection, status) VALUES (?, ?, ?, ?)",
+            (user_id, interest, objection, status)
+        )
+    conn.commit()
 
 # ================================
 # 🤖 AI FUNCTION
@@ -117,10 +149,15 @@ def save_user(user_id, name=None, business=None):
 
 def ask_ai(user_id, message):
     user = get_user(user_id)
+    lead = get_lead(user_id)
 
     memory_text = ""
-    if user:
-        memory_text = f"User name: {user[0]}. User business: {user[1]}."
+
+if user:
+    memory_text += f"User name: {user[0]}. User business: {user[1]}. "
+
+if lead:
+    memory_text += f"User interest: {lead[0]}. Objection: {lead[1]}. Status: {lead[2]}."
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -148,6 +185,22 @@ def start(update: Update, context: CallbackContext):
 def handle_message(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     text = update.message.text
+    lower = text.lower()
+
+# Detect interest
+if "whatsapp" in lower or "واتساب" in lower:
+    save_lead(user_id, interest="WhatsApp AI Bot", status="warm")
+
+if "telegram" in lower or "تيليجرام" in lower:
+    save_lead(user_id, interest="Telegram AI Bot", status="warm")
+
+# Detect price objection
+if "expensive" in lower or "غالي" in lower:
+    save_lead(user_id, objection="price")
+
+# Detect buying intent
+if "buy" in lower or "اشتري" in lower or "order" in lower:
+    save_lead(user_id, status="HOT 🔥")
 
     # Detect name
     if "my name is" in text.lower() or "اسمي" in text:
