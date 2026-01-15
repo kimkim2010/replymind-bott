@@ -152,17 +152,17 @@ def save_lead(user_id, interest=None, objection=None, status=None):
 # 🤖 AI FUNCTION
 # ================================
 
-def ask_ai(user_id, message):
+async def ask_ai(user_id, message):
     user = get_user(user_id)
     lead = get_lead(user_id)
 
     memory_text = ""
 
-if user:
-    memory_text += f"User name: {user[0]}. User business: {user[1]}. "
+    if user:
+        memory_text += f"User name: {user[0]}. User business: {user[1]}. "
 
-if lead:
-    memory_text += f"User interest: {lead[0]}. Objection: {lead[1]}. Status: {lead[2]}."
+    if lead:
+        memory_text += f"User interest: {lead[0]}. Objection: {lead[1]}. Status: {lead[2]}."
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -187,37 +187,28 @@ def start(update: Update, context: CallbackContext):
         "Tell me your name and what business you run — I’ll remember you 🧠"
     )
 
-def handle_message(update: Update, context: CallbackContext):
+async def handle_message(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     text = update.message.text
     lower = text.lower()
 
-# Detect interest
-if "whatsapp" in lower or "واتساب" in lower:
-    save_lead(user_id, interest="WhatsApp AI Bot", status="warm")
+    # Detect interest
+    if "whatsapp" in lower or "واتساب" in lower:
+        save_lead(user_id, interest="WhatsApp AI Bot", status="warm")
 
-if "telegram" in lower or "تيليجرام" in lower:
-    save_lead(user_id, interest="Telegram AI Bot", status="warm")
+    if "telegram" in lower or "تيليجرام" in lower:
+        save_lead(user_id, interest="Telegram AI Bot", status="warm")
 
-# Detect price objection
-if "expensive" in lower or "غالي" in lower:
-    save_lead(user_id, objection="price")
+    # Detect objection
+    if "expensive" in lower or "غالي" in lower:
+        save_lead(user_id, objection="price")
 
-# Detect buying intent
-if "buy" in lower or "اشتري" in lower or "order" in lower:
-    save_lead(user_id, status="HOT 🔥")
+    # Detect buying intent
+    if "buy" in lower or "اشتري" in lower or "order" in lower:
+        save_lead(user_id, status="HOT 🔥")
 
-    # Detect name
-    if "my name is" in text.lower() or "اسمي" in text:
-        name = text.split()[-1]
-        save_user(user_id, name=name)
-
-    # Detect business
-    if "i sell" in text.lower() or "أبيع" in text:
-        save_user(user_id, business=text)
-
-    reply = ask_ai(user_id, text)
-    update.message.reply_text(reply)
+    reply = await ask_ai(user_id, text)
+    await update.message.reply_text(reply)
 
 # ================================
 # 🚀 RUN
