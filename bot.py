@@ -216,14 +216,23 @@ def handle_message(update: Update, context: CallbackContext):
 # ================================
 
 def main():
+    PORT = int(os.environ.get("PORT", 10000))
+
     updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
 
-    print("🔥 ReplyMind AI (Luxury Front Desk) is running...")
-    updater.start_polling()
+    print("🔥 ReplyMind AI (Luxury Front Desk) is running with Webhook...")
+
+    updater.start_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        url_path=TELEGRAM_BOT_TOKEN,
+        webhook_url=f"https://replymind-bott.onrender.com/{TELEGRAM_BOT_TOKEN}"
+    )
+
     updater.idle()
 
 if __name__ == "__main__":
