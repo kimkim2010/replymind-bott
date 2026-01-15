@@ -118,14 +118,15 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
 
+    print("🔥 ReplyMind AI (Luxury Front Desk) is running with Webhook...")
+
     updater.start_webhook(
         listen="0.0.0.0",
         port=PORT,
         url_path=TELEGRAM_BOT_TOKEN,
-        webhook_url=f"{RENDER_URL}/{TELEGRAM_BOT_TOKEN}"
+        webhook_url=f"https://replymind-bott.onrender.com/{TELEGRAM_BOT_TOKEN}"
     )
 
-    print("🔥 ReplyMind AI is running 24/7 on Render...")
     updater.idle()
 
 if __name__ == "__main__":
