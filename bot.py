@@ -123,8 +123,8 @@ def save_user(user_id, name=None, business=None):
 
     def get_lead(user_id):
         cursor.execute(
-        "SELECT interest, objection, status FROM leads WHERE user_id=?",
-        (user_id,)
+            "SELECT interest, objection, status FROM leads WHERE user_id=?",
+            (user_id,)
     )
     return cursor.fetchone()
 
@@ -154,7 +154,7 @@ def save_lead(user_id, interest=None, objection=None, status=None):
 # 🤖 AI FUNCTION
 # ================================
 
-async def ask_ai(user_id, message):
+def ask_ai(user_id, message):
     user = get_user(user_id)
     lead = get_lead(user_id)
 
@@ -189,7 +189,7 @@ def start(update: Update, context: CallbackContext):
         "Tell me your name and what business you run — I’ll remember you 🧠"
     )
 
-async def handle_message(update: Update, context: CallbackContext):
+def handle_message(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     text = update.message.text
     lower = text.lower()
@@ -209,8 +209,8 @@ async def handle_message(update: Update, context: CallbackContext):
     if "buy" in lower or "اشتري" in lower or "order" in lower:
         save_lead(user_id, status="HOT 🔥")
 
-    reply = await ask_ai(user_id, text)
-    await update.message.reply_text(reply)
+    reply = ask_ai(user_id, text)
+    update.message.reply_text(reply)
 
 # ================================
 # 🚀 RUN
