@@ -119,8 +119,12 @@ def save_user(user_id, name=None, business=None):
             (user_id, name, business)
         )
     conn.commit()
+
     def get_lead(user_id):
-    cursor.execute("SELECT interest, objection, status FROM leads WHERE user_id=?", (user_id,))
+    cursor.execute(
+        "SELECT interest, objection, status FROM leads WHERE user_id=?",
+        (user_id,)
+    )
     return cursor.fetchone()
 
 def save_lead(user_id, interest=None, objection=None, status=None):
@@ -141,6 +145,7 @@ def save_lead(user_id, interest=None, objection=None, status=None):
             "INSERT INTO leads (user_id, interest, objection, status) VALUES (?, ?, ?, ?)",
             (user_id, interest, objection, status)
         )
+
     conn.commit()
 
 # ================================
