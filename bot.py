@@ -10,6 +10,7 @@ from openai import OpenAI
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPEN_API_KEY")
+
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # ================================
@@ -45,8 +46,6 @@ We build AI bots for:
 • Customer support
 • Sales automation
 
-These bots reply like humans, sell, understand customers, and work 24/7.
-
 Pricing:
 • WhatsApp AI Bot → 50€ / month
 • Telegram AI Bot → 50€ / month
@@ -55,26 +54,17 @@ Pricing:
 If price is expensive:
 "This is an AI employee that sells 24/7. One sale pays for itself."
 
-You never send clients to competitors.
-You always persuade.
-You are charming, confident, and convincing.
-
 When client wants to buy:
 Tell them to contact:
 📞 WhatsApp: +49 177 7952971
 📸 Instagram: replymindai
 📧 Email: replymindai@gmail.com
 
-You remember the user name and business.
-You speak like a human.
-You adapt to their mood.
-You link every topic back to how ReplyMindAI helps.
-
 You are luxury, intelligent, persuasive, and unforgettable.
 """
 
 # ================================
-# 💾 MEMORY DATABASE
+# 💾 DATABASE
 # ================================
 
 conn = sqlite3.connect("memory.db", check_same_thread=False)
@@ -87,7 +77,6 @@ CREATE TABLE IF NOT EXISTS users (
     business TEXT
 )
 """)
-conn.commit()
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS leads (
@@ -97,6 +86,7 @@ CREATE TABLE IF NOT EXISTS leads (
     status TEXT
 )
 """)
+
 conn.commit()
 
 # ================================
@@ -104,7 +94,10 @@ conn.commit()
 # ================================
 
 def get_user(user_id):
-    cursor.execute("SELECT name, business FROM users WHERE user_id=?", (user_id,))
+    cursor.execute(
+        "SELECT name, business FROM users WHERE user_id=?",
+        (user_id,)
+    )
     return cursor.fetchone()
 
 def save_user(user_id, name=None, business=None):
@@ -121,13 +114,12 @@ def save_user(user_id, name=None, business=None):
         )
     conn.commit()
 
-    def get_lead(user_id):
-        cursor.execute(
-            "SELECT interest, objection, status FROM leads WHERE user_id=?",
-            (user_id,)
+def get_lead(user_id):
+    cursor.execute(
+        "SELECT interest, objection, status FROM leads WHERE user_id=?",
+        (user_id,)
     )
     return cursor.fetchone()
-
 
 def save_lead(user_id, interest=None, objection=None, status=None):
     existing = get_lead(user_id)
@@ -147,7 +139,6 @@ def save_lead(user_id, interest=None, objection=None, status=None):
             "INSERT INTO leads (user_id, interest, objection, status) VALUES (?, ?, ?, ?)",
             (user_id, interest, objection, status)
         )
-
     conn.commit()
 
 # ================================
@@ -185,7 +176,7 @@ def ask_ai(user_id, message):
 def start(update: Update, context: CallbackContext):
     update.message.reply_text(
         "🔥 Welcome to ReplyMindAI!\n\n"
-        "I’m your smart AI front desk 😏✨\n\n"
+        "I’m your luxury AI front desk 😏✨\n\n"
         "Tell me your name and what business you run — I’ll remember you 🧠"
     )
 
@@ -193,6 +184,14 @@ def handle_message(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     text = update.message.text
     lower = text.lower()
+
+    # Detect name
+    if "my name is" in lower or "اسمي" in lower:
+        save_user(user_id, name=text.split()[-1])
+
+    # Detect business
+    if "i sell" in lower or "أبيع" in lower:
+        save_user(user_id, business=text)
 
     # Detect interest
     if "whatsapp" in lower or "واتساب" in lower:
@@ -215,24 +214,16 @@ def handle_message(update: Update, context: CallbackContext):
 # ================================
 # 🚀 RUN
 # ================================
-def main():
-    PORT = int(os.environ.get("PORT", 10000))
 
+def main():
     updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
 
-    print("🔥 ReplyMind AI (Luxury Front Desk) is running with Webhook...")
-
-    updater.start_webhook(
-        listen="0.0.0.0",
-        port=PORT,
-        url_path=TELEGRAM_BOT_TOKEN,
-        webhook_url=f"https://replymind-bott.onrender.com/{TELEGRAM_BOT_TOKEN}"
-    )
-
+    print("🔥 ReplyMind AI (Luxury Front Desk) is running...")
+    updater.start_polling()
     updater.idle()
 
 if __name__ == "__main__":
