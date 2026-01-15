@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS users (
 )
 """)
 conn.commit()
+
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS leads (
     user_id INTEGER PRIMARY KEY,
@@ -121,11 +122,12 @@ def save_user(user_id, name=None, business=None):
     conn.commit()
 
     def get_lead(user_id):
-    cursor.execute(
+        cursor.execute(
         "SELECT interest, objection, status FROM leads WHERE user_id=?",
         (user_id,)
     )
     return cursor.fetchone()
+
 
 def save_lead(user_id, interest=None, objection=None, status=None):
     existing = get_lead(user_id)
